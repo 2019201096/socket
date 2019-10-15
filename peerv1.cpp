@@ -3,6 +3,7 @@
 //ie ./a.out 50000
 //after that enter the port of the server you as peer client want to connect to
 //hence always first start the server you want to connect in other terminal
+//copy the same program in all folders(peers) if any update in one and compile in all folders
 #include <stdio.h> 
 #include <sys/socket.h> 
 #include <stdlib.h> 
@@ -62,11 +63,19 @@ void* server(void* p){
   		FILE *fp=fopen("gitpwd","rb");
 		fseek(fp,0,SEEK_END);
 		int size=ftell(fp);
-		rewind(fp);
-		send(sockfd,&size,sizeof(int),0);
+		cout<<"size 1 is"<<size<<endl;
+		fseek(fp,0,SEEK_SET);
+		//rewind(fp);
+		send(sockfd,&size,sizeof(int),0); ////////////////////////////////////////////////////////////////////
+		int chunk;
+		recv(sockfd,&chunk,sizeof(int),0); //////////////////////////////////////////////////////////////////
 		char Buffer[256];
 		int n;
-		while((n=fread(Buffer,sizeof(char),50,fp))>0 && size>0){
+		int x=chunk*50;
+  		fseek(fp, x, SEEK_SET);
+  		int size1=ftell(fp);
+  		cout<<"size 2is"<<size1<<endl;
+		if((n=fread(Buffer,sizeof(char),50,fp))>0 && size>0){
 			send(sockfd,Buffer,n,0);
 			size=size-n;
 		}
@@ -111,29 +120,29 @@ void* client(void * o){
 	 	exit(1);	
 	}
 
-	FILE *fp=fopen("newf","ab");
+	FILE *fp=fopen("newf","a+");
 	//int x=taskid*256;
   //  fseek(fp, 0, x);
 		char Buffer[50];
 		int file_size;
 		memset(Buffer,0,50);
-		recv(sockfd,&file_size,sizeof(int),0);
+		recv(sockfd,&file_size,sizeof(int),0);///////////////////////////////////////////////////////////
 		cout<<file_size<<"\n ";
 		int n;
 		//adding below to receive fp
 		
 		// unsigned int buf=0;
 		// recv(sockfd,&buf,sizeof(buf),0);
+		int chunk=0;  //2,0
+		send(sockfd,&chunk,sizeof(int),0);///////////////////////////////////////////////////////////////
+		int x=chunk*50;
+  		    fseek(fp, x, SEEK_SET);
 
-		while((n=recv(sockfd,Buffer,50,0))>0 &&file_size>0){
-			//sleep(1);	
-		//	cout<<"bufsize "<<buf<<endl;
+		if((n=recv(sockfd,Buffer,50,0))>0)// &&file_size>0////////////////////////////////////////////////////
+			{
+			
 			fwrite(Buffer,sizeof(char),n,fp);
-			//memset(Buffer,'\0',25);
-			file_size=file_size-n;
-			// if(file_size>0)
-			//   recv(sockfd,&buf,sizeof(buf),0);
-		}
+			}
 		close(sockfd);
 		fclose(fp);
 	}
